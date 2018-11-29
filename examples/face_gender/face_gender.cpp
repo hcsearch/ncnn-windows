@@ -24,6 +24,8 @@
 #define _MAX_PATH 260
 #endif
 
+#define FACE_GENDER_MODEL_NAME "libsnfg.so"
+
 namespace
 {
     char g_szDeepFeatSDKPath[_MAX_PATH] = { 0 };
@@ -169,7 +171,10 @@ int __stdcall InitFaceGender(const char *szNetName,
 	{
 		std::string strDllPath;
 		strDllPath = g_szDeepFeatSDKPath;
-        strDllPath += szNetName;
+        if (szNetName != 0)
+            strDllPath += szNetName;
+        else
+            strDllPath += FACE_GENDER_MODEL_NAME;
 
         std::fstream fileModel;
         fileModel.open(strDllPath.c_str(), std::fstream::in | std::fstream::binary);

@@ -137,15 +137,17 @@ int main(int argc, char** argv)
         Bbox face_box;
         MTCNN fd_mtcnn(pModulePath);
 
-
         // Initialize        
         retValue = SetFaceGenderLibPath(pModulePath);
         
         BeautyHandle hFace;
         retValue |= InitFaceGender("libsnfg.so", &hFace, 1);
         //retValue |= InitDeepFeat("NNModel.dat", gpuId, &hAge);
-        if (0 != retValue)
+        if (0 != retValue) {
+            std::cout << "Error Code: " << retValue << std::endl;
             throw retValue;
+        }
+            
         
         // Read Image
         //cv::Mat garyImgData = cv::imread(strImgName, CV_LOAD_IMAGE_GRAYSCALE);
@@ -161,74 +163,9 @@ int main(int argc, char** argv)
             feaPoints[2 * j] = face_box.ppoint[j];
             feaPoints[2 * j + 1] = face_box.ppoint[j + 5];
         }
-        // Choose eye corner and lip corner, suppose1cdhmopruw
-        // The normalization method should be considered by some days
-        // Use old normalization method
         
-
-        /*nRetCode = NormalizeFace(oriImgData.data, oriImgData.cols, oriImgData.rows, oriImgData.channels(), FeaPoints, NormPoint,
-            weight, 88, 300, 300, pDstImage);
-        if (ERR_NONE != nRetCode)
-        {
-            std::cout << "Failed to normalize faces!" << std::endl;
-            throw nRetCode;
-        }*/
-        
-        //smart_ptr<unsigned char> pNormFace(300 * 300 * 3);
-        //for (int p = 0; p < 300 * 300 * 3; ++p)
-        //    pNormFace[p] = (unsigned char)(int(pDstImage[p]));
-
-        //AutoArray<unsigned char> pCropNormFace(256 * 256 * 3);
-        //AutoArray<unsigned char> pCropGrayNormFace(256 * 256);
-
-        ////cv::Mat NormFaceImage(300, 300, CV_8UC3, pNormFace);
-        //cv::Rect roi(22, 22, 256, 256);
-        //cv::Mat CropImage = face_img(roi);
-        //cv::Mat GrayCropImage;
-        //cv::cvtColor(CropImage, GrayCropImage, cv::COLOR_BGR2GRAY);
-
-        /*for (int h = 0; h < CropImage.rows; ++h) {
-            const uchar* ptr = CropImage.ptr<uchar>(h);
-            int img_index = 0;
-            for (int w = 0; w < CropImage.cols; ++w) {
-                for (int c = 0; c < CropImage.channels(); ++c) {
-                    int datum_index = (c * CropImage.rows + h) * CropImage.cols + w;
-                    pCropNormFace[datum_index] = static_cast<char>(ptr[img_index++]);
-                }
-            }
-        }*/
-
-        /*for (int h = 0; h < GrayCropImage.rows; ++h) {
-            const uchar* ptr = GrayCropImage.ptr<uchar>(h);
-            int img_index = 0;
-            for (int w = 0; w < GrayCropImage.cols; ++w) {
-                for (int c = 0; c < GrayCropImage.channels(); ++c) {
-                    int datum_index = (c * GrayCropImage.rows + h) * GrayCropImage.cols + w;
-                    pCropGrayNormFace[datum_index] = static_cast<char>(ptr[img_index++]);
-                }
-            }
-        }*/
-        /*AutoArray<unsigned char> image_data(
-            oriImgData.cols * oriImgData.rows * oriImgData.channels()
-        );
-
-        unsigned char *ptr = image_data.begin();
-        for (int h = 0; h < oriImgData.rows; ++h) {
-            for (int w = 0; w < oriImgData.cols; ++w) {
-                for (int c = 0; c < oriImgData.channels(); ++c) {
-                    *ptr = oriImgData.at<cv::Vec3b>(h, w)[c];
-                    ptr++;
-                }
-            }
-        }
-        ptr = 0;*/
-        
-        // 1、总体分
-        /*int featDim = GetDeepFeatSize(hFace) / 4;
-        AutoArray<float> pFeatures(featDim);*/
         cv::Mat cvt_image;
         cv::cvtColor(oriImgData, cvt_image, cv::COLOR_BGR2RGB);
-        AutoArray<float *> pFeatures(1);
         int age = 0;
         float gender_score = 0.0f;
         retValue = GetFaceGenderScore(hFace, feaPoints,
@@ -261,149 +198,40 @@ int main(int argc, char** argv)
             if (0 != retValue)
                 continue;
 
-            cv::Mat oriImgData = cv::imread(imgList[l], CV_LOAD_IMAGE_COLOR);
-
-            /*float feaPoints[10];
-            for (int j = 0; j < 10; ++j) {
-                feaPoints[j] = face_box.ppoint[j];
+            float feaPoints[10];
+            for (int j = 0; j < 5; ++j) {
+                feaPoints[2 * j] = face_box.ppoint[j];
+                feaPoints[2 * j + 1] = face_box.ppoint[j + 5];
             }
 
-            AutoArray<unsigned char> image_data(
-                oriImgData.cols * oriImgData.rows * oriImgData.channels()
-            );
+            cv::Mat oriImgData = cv::imread(imgList[l], CV_LOAD_IMAGE_COLOR);
 
-            unsigned char *ptr = image_data.begin();
-            for (int h = 0; h < oriImgData.rows; ++h) {
-                for (int w = 0; w < oriImgData.cols; ++w) {
-                    for (int c = 0; c < oriImgData.channels(); ++c) {
-                        *ptr = oriImgData.at<cv::Vec3b>(h, w)[c];
-                        ptr++;
-                    }
-                }
-            }*/
-            /*ptr = 0;*/
             cv::Mat cvt_image;
             cv::cvtColor(oriImgData, cvt_image, cv::COLOR_BGR2RGB);
 
-            AutoArray<float *> pFeatures(1);
-            int fea_dim = 0;
-            retValue = GetFaceBeautyScore(hFace, face_box.ppoint,
+            int age = 0;
+            float gender_score = 0.0f;
+            retValue = GetFaceBeautyScore(hFace, feaPoints,
                 cvt_image.data, oriImgData.cols, oriImgData.rows,
-                oriImgData.channels(), pFeatures.begin(), fea_dim);
+                oriImgData.channels(), gender_score, age);
 
-            float score = (*pFeatures)[0] * 1.11f;
-            if (score > 100.0f)
-                score = 100.0f;
+            // 计算性别
+            if (gender_score > 0.5f)
+                std::cout << "Gender: female" << std::endl;
+            else
+                std::cout << "Gender: male" << std::endl;
 
-            std::cout << imgList[l] << " score: " << score << std::endl;
-
-            delete[](*pFeatures);
+            // 计算年龄
+            if (age <= 16)
+                std::cout << "child" << std::endl;
+            else if (age >= 62)
+                std::cout << "old" << std::endl;
+            else
+                std::cout << "Age: " << age << std::endl;
         }
 #endif
         
-        //// 2、瑕疵
-        //featDim = GetDeepFeatSize(hXiaci) / 4;
-        //pFeatures.reset(featDim);
-        //nRetCode = InnerDeepFeat(hXiaci, pCropNormFace, 1, 3, 256, 256, pFeatures);
-
-        //float maxR = -10000.0f;
-        //int label = 15;
-        //for (int j = 0; j < featDim; ++j)
-        //{
-        //    //std::cout << pFeatures[j] << " ";
-        //    if (maxR < pFeatures[j])
-        //    {
-        //        maxR = pFeatures[j];
-        //        label = j;
-        //    }
-        //}
-
-        //if (0 == label)
-        //    std::cout << "The flaws' number: " << "none!" << std::endl;
-        //else if (1 == label)
-        //    std::cout << "The flaws' number: " << "a little!" << std::endl;
-        //else if (2 == label)
-        //    std::cout << "The flaws' number: " << "small!" << std::endl;
-        //else if (3 == label)
-        //    std::cout << "The flaws' number: " << "a lot!" << std::endl;
-        //else if (4 == label)
-        //    std::cout << "The flaws' number: " << "very much!" << std::endl;
-
-        //// 3、开心
-        //featDim = GetDeepFeatSize(hHappy) / 4;
-        //pFeatures.reset(featDim);
-        //nRetCode = InnerDeepFeat(hHappy, pCropNormFace, 1, 3, 256, 256, pFeatures);
-
-        //maxR = -10000.0f;
-        //label = 15;
-        //for (int j = 0; j < featDim; ++j)
-        //{
-        //    //std::cout << pFeatures[j] << " ";
-        //    if (maxR < pFeatures[j])
-        //    {
-        //        maxR = pFeatures[j];
-        //        label = j;
-        //    }
-        //}
-        //// std::cout << std::endl;
-
-        //if (0 == label)
-        //    std::cout << "Angry!" << std::endl;
-        //else if (1 == label)
-        //    std::cout << "Unhappy!" << std::endl;
-        //else if (2 == label)
-        //    std::cout << "normal!" << std::endl;
-        //else if (3 == label)
-        //    std::cout << "happy!" << std::endl;
-        //else if (4 == label)
-        //    std::cout << "smile!" << std::endl;
-
-        // 4、年龄
-        //featDim = GetDeepFeatSize(hAge) / 4;
-        //pFeatures.resize(featDim);
-        //retValue = InnerDeepFeat(hAge, pNormImage5Pt, 1, 3, 256, 256, pFeatures);
-    
-        //maxR = -10000.0f;
-        //label = 15;
-        //for (int j = 0; j < featDim; ++j)
-        //{
-        //    //std::cout << pFeatures[j] << " ";
-        //    if (maxR < pFeatures[j])
-        //    {
-        //        maxR = pFeatures[j];
-        //        label = j;
-        //    }
-        //}
-        //if (0 == label)
-        //    std::cout << "小孩!" << std::endl;
-        //else if (1 == label)
-        //    std::cout << "少年!" << std::endl;
-        //else if (2 == label)
-        //    std::cout << "青年!" << std::endl;
-        //else if (3 == label)
-        //    std::cout << "中年!" << std::endl;
-        //else if (4 == label)
-        //    std::cout << "老年!" << std::endl;
-        // std::cout << std::endl;
-
-        //// 5、肤色
-        //featDim = GetDeepFeatSize(hSkin) / 4;
-        //pFeatures.reset(featDim);
-        //nRetCode = InnerDeepFeat(hSkin, pCropNormFace, 1, 3, 256, 256, pFeatures);
-
-        //score = pFeatures[0] * 1.11f;
-        //if (score > 100.0f)
-        //    score = 100.0f;    
-        //std::cout << "Skin score: " << score << std::endl;
-        
-        // Uninitialized
-        //FaceDetectUninit();
-        //FaceAlignmentUninit();
         UninitFaceGender(hFace);
-        //UninitDeepFeat(hSkin);
-        //UninitDeepFeat(hXiaci);
-        //UninitDeepFeat(hHappy);
-        //UninitDeepFeat(hAge);
     }
     catch (const std::bad_alloc &)
 	{

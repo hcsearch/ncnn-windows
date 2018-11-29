@@ -242,3 +242,5 @@ ModelManifest.xml
 .fake/
 /windows/libncnn/My Advisor Results - libncnn/project_read_only.infoadvixe
 /windows/libncnn/My Advisor Results - libncnn/project_read_only.dflgadvixe
+*.dflgadvixe
+*.infoadvixe
