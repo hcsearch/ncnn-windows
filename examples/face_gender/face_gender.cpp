@@ -37,7 +37,7 @@ namespace
 
 int __stdcall GetFaceGenderScore(BeautyHandle handle,
     const float *feaPoints, const unsigned char *image_data, int width,
-    int height, int channel, float **pFeatures, int &fea_dim)
+    int height, int channel, float &gender_score, int &age)
 {
     if (image_data == 0 || width <= 0 || height <= 0)
         return  INVALID_IMAGE;
@@ -86,12 +86,21 @@ int __stdcall GetFaceGenderScore(BeautyHandle handle,
         ex.input("data", ncnn_face_img);
         ncnn::Mat out;
         ex.extract("output", out);
-        fea_dim = out.total();
-        (*pFeatures) = new float[fea_dim];
-        for (int j = 0; j<fea_dim; j++)
+        AutoArray<float> pFeatures(out.total());
+        for (int j = 0; j<out.total(); j++)
         {
-            (*pFeatures)[j] = out[j];
+            pFeatures[j] = out[j];
         }
+
+        gender_score = pFeatures[0];
+        age = 0;
+        int iter = (out.total() - 2) / 2;
+        for (int c = 2; c < iter; ++c)
+        {
+            if (pFeatures[2 * c + 2] < pFeatures[2 * c + 3])
+                age++;
+        }
+        age = age + 16;
 
         //count = clock() - count;
         //std::cout << "3: " << count << std::endl;

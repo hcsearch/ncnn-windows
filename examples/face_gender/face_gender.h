@@ -54,7 +54,7 @@ extern "C"
     */
     int __stdcall GetFaceGenderScore(BeautyHandle handle,
         const float *feaPoints, const unsigned char *image_data,int width, 
-        int height, int channel, float **pFeatures, int &fea_dim);
+        int height, int channel, float &gender_score, int &age);
 #ifdef __cplusplus
 }
 #endif

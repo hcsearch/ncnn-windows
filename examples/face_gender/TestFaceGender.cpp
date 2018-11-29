@@ -229,33 +229,25 @@ int main(int argc, char** argv)
         cv::Mat cvt_image;
         cv::cvtColor(oriImgData, cvt_image, cv::COLOR_BGR2RGB);
         AutoArray<float *> pFeatures(1);
-        int fea_dim = 0;
+        int age = 0;
+        float gender_score = 0.0f;
         retValue = GetFaceGenderScore(hFace, feaPoints,
             cvt_image.data, oriImgData.cols, oriImgData.rows,
-            oriImgData.channels(), pFeatures.begin(), fea_dim);
+            oriImgData.channels(), gender_score, age);
 
         // 计算性别
-        if ((*pFeatures)[0] > (*pFeatures)[1])
+        if (gender_score > 0.5f)
             std::cout << "Gender: female" << std::endl;
         else
             std::cout << "Gender: male" << std::endl;
 
         // 计算年龄
-        int age = 0;
-        int iter = (fea_dim - 2) / 2;
-        for (int c = 2; c < iter; ++c)
-        {
-            if ((*pFeatures)[2 * c + 2] < (*pFeatures)[2 * c + 3])
-                age++;
-        }
-        if (age <= 0)
+        if (age <= 16)
             std::cout << "child" << std::endl;
-        else if (age >= 46)
+        else if (age >= 62)
             std::cout << "old" << std::endl;
         else
-            std::cout << "Age: " << age + 16 <<std::endl;
-
-        delete[](*pFeatures);
+            std::cout << "Age: " << age << std::endl;
 #else
         char path_list[512] = { 0 };
         strcpy(path_list, strImgName.c_str());
